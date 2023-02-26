@@ -97,7 +97,7 @@ class RelayManager:
                 relay = self.relays[url]
                 relay.close()
 
-    def publish_event(self, event: Event):
+    def publish_event(self, event: Event, relays: list = []):
         """ Verifies that the Event is publishable before submitting it to relays """
         if event.signature is None:
             raise RelayException(f"Could not publish {event.id}: must be signed")
@@ -105,7 +105,11 @@ class RelayManager:
         if not event.verify():
             raise RelayException(f"Could not publish {event.id}: failed to verify signature {event.signature}")
 
+        publish_to_relays = self.relays.values()
+        if relays:
+            publish_to_relays = [relay for relay in publish_to_relays if relay.url in relays]
+
         with self.lock:
-            for relay in self.relays.values():
+            for relay in publish_to_relays:
                 if relay.policy.should_write:
                     relay.publish(event.to_message())
