@@ -20,9 +20,11 @@ class RelayException(Exception):
 
 @dataclass
 class RelayManager:
+    filter_unique: bool = True
+    
     def __post_init__(self):
         self.relays: dict[str, Relay] = {}
-        self.message_pool: MessagePool = MessagePool()
+        self.message_pool: MessagePool = MessagePool(self.filter_unique)
         self.lock: Lock = Lock()
 
     def add_relay(
